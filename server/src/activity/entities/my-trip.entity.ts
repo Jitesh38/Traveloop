@@ -62,6 +62,19 @@ export class MyTrip {
   @Column({ name: 'end_date', type: 'date' })
   endDate: string;
 
+  // ─── Budget & Notes ────────────────────────────────────────────────────────
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  budget: number;
+
+  @Column({ type: 'text', nullable: true })
+  description: string;
+
+  // ─── Invoice ───────────────────────────────────────────────────────────────
+
+  @Column({ name: 'is_paid', type: 'boolean', default: false })
+  isPaid: boolean;
+
   // ─── Trip Activities (OneToMany) ────────────────────────────────────────────
 
   /**

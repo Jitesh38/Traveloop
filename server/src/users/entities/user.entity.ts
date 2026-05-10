@@ -9,6 +9,11 @@ import {
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
+export enum UserRole {
+  USER  = 'user',
+  ADMIN = 'admin',
+}
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
@@ -37,6 +42,12 @@ export class User {
 
   @Column({ name: 'picture_url', nullable: true })
   pictureUrl: string;
+
+  @Column({ type: 'enum', enum: UserRole, default: UserRole.USER })
+  role: UserRole;
+
+  @Column({ name: 'is_active', type: 'boolean', default: true })
+  isActive: boolean;
 
   @Column({ select: false })
   password: string;
