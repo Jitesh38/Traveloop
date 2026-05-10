@@ -45,7 +45,7 @@ function LandingToolbar({ filters, onFiltersChange }) {
         <span className="sr-only">Search trips</span>
         <input
           type="search"
-          placeholder="Search Indian cities, stays, or stops"
+          placeholder="Search regions, trips, or activities"
           value={filters.search}
           onChange={(event) => updateFilter('search', event.target.value)}
         />
