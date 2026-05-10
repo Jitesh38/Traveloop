@@ -81,7 +81,6 @@ export const mapTripToCard = (trip, timeline) => {
   if (timeline === 'planned') meta = `Starts ${formatCompactDate(trip.startDate)}`
   if (timeline === 'previous') meta = `Completed ${formatCompactDate(trip.endDate)}`
   if (timeline === 'ongoing') meta = `In progress until ${formatCompactDate(trip.endDate)}`
-  if (hasBudget) meta = `${meta} - Budget ${formatBudgetLabel(totalBudget)}`
 
   const averageRating = activityCount
     ? trip.tripActivities.reduce((sum, item) => sum + Number(item.activity?.rating || 0), 0) / activityCount
@@ -91,11 +90,12 @@ export const mapTripToCard = (trip, timeline) => {
     id: `trip-${trip.id}`,
     tripId: trip.id,
     title: trip.name || trip.region?.name || 'Untitled trip',
-    subtitle: `${durationDays} day${durationDays > 1 ? 's' : ''}, ${activityCount} planned activit${activityCount === 1 ? 'y' : 'ies'}.`,
+    subtitle: `${durationDays} day${durationDays > 1 ? 's' : ''} trip.`,
     meta,
     rating: averageRating > 0 ? averageRating.toFixed(1) : '',
     location: trip.region?.name || '',
     price: hasBudget ? formatBudgetLabel(totalBudget) : '',
     image: getTripImage(trip),
+    activityCount,
   }
 }

@@ -27,6 +27,12 @@ function AppHeader({ onHomeClick }) {
       </a>
       <div className="flex items-center gap-4">
         <button
+          onClick={() => navigate('/trips')}
+          className="header-nav-button"
+        >
+          My Trips
+        </button>
+        <button
           onClick={handleLogout}
           className="px-4 py-2 text-sm font-bold text-red-500 bg-red-50 rounded-lg hover:bg-red-100 transition-colors cursor-pointer"
         >
