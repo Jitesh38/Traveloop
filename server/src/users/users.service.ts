@@ -21,8 +21,9 @@ export class UsersService {
     const { password: _, hashPassword: __, ...userPayload } = user as any;
 
     const accessToken = this.jwtService.sign({
-      sub: user.id,
+      sub:  user.id,
       email: user.email,
+      role:  user.role,
     });
 
     // Decode to read the actual expiry the JwtService applied
@@ -71,26 +72,13 @@ export class UsersService {
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      // Same generic message — never reveal which field was wrong
       throw new UnauthorizedException('Invalid email or password');
     }
 
+    if (!user.isActive) {
+      throw new UnauthorizedException('Your account has been disabled. Please contact support.');
+    }
+
     return this.buildAuthResponse(user);
-  }
-
-  findAll() {
-    return `This action returns all users`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
-
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
   }
 }

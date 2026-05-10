@@ -1,19 +1,22 @@
-import { useMemo, useState } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import UserProfilePage from './pages/UserProfilePage'
 import {
   AppHeader,
   Banner,
+  BuildItineraryPage,
   CreateTripPage,
   LandingToolbar,
   PlanTripButton,
   SectionHeader,
-  TripRow,
   TripCard,
+  TripRow,
 } from './components'
-import { previousTrips, regionalSelections, upcomingTrips } from './data/travel'
+import { API_URL, getAuthHeaders, readJson } from './utils/api'
+import { getToken } from './utils/auth'
+import { getBudgetValue, mapRegionToCard, mapTripToCard } from './utils/trips'
 
 const defaultFilters = {
   search: '',
@@ -21,8 +24,6 @@ const defaultFilters = {
   budget: 'all',
   sortBy: 'recommended',
 }
-
-const getBudgetValue = (item) => Number(item.price?.replace(/\D/g, '') || 0)
 
 const matchesSearch = (item, search) => {
   const query = search.trim().toLowerCase()
@@ -38,6 +39,10 @@ const matchesSearch = (item, search) => {
 
 const matchesBudget = (item, budget) => {
   const value = getBudgetValue(item)
+
+  if (budget !== 'all' && value === null) {
+    return false
+  }
 
   if (budget === 'under-10') {
     return value < 10
@@ -56,13 +61,20 @@ const matchesBudget = (item, budget) => {
 
 const sortItems = (items, sortBy) => {
   const sortedItems = [...items]
+  const sortableBudget = (item, direction) => {
+    const value = getBudgetValue(item)
+    if (value === null) {
+      return direction === 'low' ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY
+    }
+    return value
+  }
 
   if (sortBy === 'budget-low') {
-    return sortedItems.sort((a, b) => getBudgetValue(a) - getBudgetValue(b))
+    return sortedItems.sort((a, b) => sortableBudget(a, 'low') - sortableBudget(b, 'low'))
   }
 
   if (sortBy === 'budget-high') {
-    return sortedItems.sort((a, b) => getBudgetValue(b) - getBudgetValue(a))
+    return sortedItems.sort((a, b) => sortableBudget(b, 'high') - sortableBudget(a, 'high'))
   }
 
   if (sortBy === 'rating') {
@@ -88,66 +100,160 @@ const getGroupedTitle = (title, items, groupBy) => {
 }
 
 function HomePage() {
-  const [activeScreen, setActiveScreen] = useState('home')
+  const navigate = useNavigate()
   const [filters, setFilters] = useState(defaultFilters)
+  const [regions, setRegions] = useState([])
+  const [tripGroups, setTripGroups] = useState({ ongoing: [], previous: [], planned: [] })
+  const [loadingHome, setLoadingHome] = useState(true)
+  const [homeError, setHomeError] = useState(null)
+  const [tripsError, setTripsError] = useState(null)
+
+  useEffect(() => {
+    const token = getToken()
+    if (!token) {
+      setHomeError('Please log in to view your trips.')
+      setLoadingHome(false)
+      return
+    }
+
+    let ignore = false
+
+    const loadHome = async () => {
+      setLoadingHome(true)
+      setHomeError(null)
+      setTripsError(null)
+
+      try {
+        const headers = getAuthHeaders()
+        const [regionsRes, tripsRes] = await Promise.allSettled([
+          fetch(`${API_URL}/activity/regions`, { headers }),
+          fetch(`${API_URL}/activity/my-trips`, { headers }),
+        ])
+
+        if (regionsRes.status !== 'fulfilled' || !regionsRes.value.ok) {
+          throw new Error('Failed to load regions from the backend.')
+        }
+
+        const regionsData = await readJson(regionsRes.value)
+
+        if (ignore) {
+          return
+        }
+
+        setRegions(Array.isArray(regionsData) ? regionsData : [])
+
+        if (tripsRes.status === 'fulfilled' && tripsRes.value.ok) {
+          const tripsData = await readJson(tripsRes.value)
+
+          if (ignore) {
+            return
+          }
+
+          setTripGroups({
+            ongoing: Array.isArray(tripsData?.ongoing) ? tripsData.ongoing : [],
+            previous: Array.isArray(tripsData?.previous) ? tripsData.previous : [],
+            planned: Array.isArray(tripsData?.planned) ? tripsData.planned : [],
+          })
+        } else {
+          setTripGroups({ ongoing: [], previous: [], planned: [] })
+          setTripsError('Trips are unavailable right now. Your regions are still loading correctly.')
+        }
+      } catch (error) {
+        if (!ignore) {
+          setHomeError(error.message || 'Failed to load your travel dashboard.')
+        }
+      } finally {
+        if (!ignore) {
+          setLoadingHome(false)
+        }
+      }
+    }
+
+    loadHome()
+
+    return () => {
+      ignore = true
+    }
+  }, [])
 
   const filteredRegions = useMemo(
-    () => filterItems(regionalSelections, filters),
-    [filters],
+    () => filterItems(
+      [...regions]
+        .sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0))
+        .slice(0, 8)
+        .map(mapRegionToCard),
+      filters,
+    ),
+    [filters, regions],
   )
   const filteredUpcomingTrips = useMemo(
-    () => filterItems(upcomingTrips, filters),
-    [filters],
+    () => filterItems(tripGroups.planned.map((trip) => mapTripToCard(trip, 'planned')), filters),
+    [filters, tripGroups.planned],
+  )
+  const filteredOngoingTrips = useMemo(
+    () => filterItems(tripGroups.ongoing.map((trip) => mapTripToCard(trip, 'ongoing')), filters),
+    [filters, tripGroups.ongoing],
   )
   const filteredPreviousTrips = useMemo(
-    () => filterItems(previousTrips, filters),
-    [filters],
+    () => filterItems(tripGroups.previous.map((trip) => mapTripToCard(trip, 'previous')), filters),
+    [filters, tripGroups.previous],
   )
 
-  if (activeScreen === 'create-trip') {
-    return (
-      <main className="app-shell">
-        <section className="landing-page" aria-label="Create a new trip">
-          <CreateTripPage onHomeClick={() => setActiveScreen('home')} />
-        </section>
-      </main>
-    )
+  const openItinerary = (trip) => {
+    if (trip.tripId) {
+      navigate(`/trip/${trip.tripId}/itinerary`)
+    }
   }
 
   return (
     <main className="app-shell">
       <section className="landing-page" aria-label="Traveloop landing page">
-        <AppHeader onHomeClick={() => setActiveScreen('home')} />
+        <AppHeader onHomeClick={() => navigate('/home')} />
 
         <div className="landing-content">
           <Banner />
           <LandingToolbar filters={filters} onFiltersChange={setFilters} />
 
+          {homeError && <p className="empty-row">{homeError}</p>}
+          {tripsError && <p className="empty-row">{tripsError}</p>}
+          {loadingHome && <p className="empty-row">Loading your travel dashboard...</p>}
+
           <SectionHeader title="Top Regional Selections" />
-          {filteredRegions.length > 0 ? (
+          {!loadingHome && filteredRegions.length > 0 ? (
             <div className="regional-grid" aria-label="Popular cities and recommended destinations">
               {filteredRegions.map((region) => (
                 <TripCard key={region.id} item={region} variant="compact" />
               ))}
             </div>
-          ) : (
+          ) : !loadingHome ? (
             <p className="empty-row">No destinations match the current filters.</p>
-          )}
+          ) : null}
 
           <SectionHeader title="Your Trips" />
-          <div className="your-trips" aria-label="Your trips">
-            <TripRow
-              title={getGroupedTitle('Upcoming Trips', filteredUpcomingTrips, filters.groupBy)}
-              trips={filteredUpcomingTrips}
-            />
-            <TripRow
-              title={getGroupedTitle('Previous Trips', filteredPreviousTrips, filters.groupBy)}
-              trips={filteredPreviousTrips}
-            />
-          </div>
+          {!loadingHome ? (
+            <div className="your-trips" aria-label="Your trips">
+              {filteredOngoingTrips.length > 0 && (
+                <TripRow
+                  title={getGroupedTitle('Ongoing Trips', filteredOngoingTrips, filters.groupBy)}
+                  trips={filteredOngoingTrips}
+                  onSelectTrip={openItinerary}
+                />
+              )}
+              <TripRow
+                title={getGroupedTitle('Upcoming Trips', filteredUpcomingTrips, filters.groupBy)}
+                trips={filteredUpcomingTrips}
+                onSelectTrip={openItinerary}
+              />
+              <TripRow
+                title={getGroupedTitle('Previous Trips', filteredPreviousTrips, filters.groupBy)}
+                trips={filteredPreviousTrips}
+                onSelectTrip={openItinerary}
+              />
+            </div>
+          ) : null}
         </div>
 
-        <PlanTripButton onClick={() => setActiveScreen('create-trip')} />
+        <PlanTripButton onClick={() => navigate('/trip/new')} />
       </section>
     </main>
   )
@@ -157,11 +263,13 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/"         element={<Navigate to="/login" replace />} />
-        <Route path="/login"    element={<LoginPage />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/home"     element={<HomePage />} />
-        <Route path="/profile"  element={<UserProfilePage />} />
+        <Route path="/home"                    element={<HomePage />} />
+        <Route path="/profile"                 element={<UserProfilePage />} />
+        <Route path="/trip/new"                element={<CreateTripPage />} />
+        <Route path="/trip/:tripId/itinerary"  element={<BuildItineraryPage />} />
       </Routes>
     </BrowserRouter>
   )

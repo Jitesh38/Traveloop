@@ -54,6 +54,13 @@ export class Activity {
   type: ActivityType;
 
   /**
+   * Price per day in the local currency (e.g. INR, USD).
+   * Used for invoice line-item calculation: price × tripDurationDays.
+   */
+  @Column({ name: 'price_per_day', type: 'decimal', precision: 10, scale: 2, default: 0 })
+  pricePerDay: number;
+
+  /**
    * Average rating (0.00 – 5.00).
    */
   @Column({ type: 'decimal', precision: 3, scale: 2, default: 0 })

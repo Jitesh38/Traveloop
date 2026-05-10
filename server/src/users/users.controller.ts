@@ -90,28 +90,4 @@ export class UsersController {
   getMe(@CurrentUser() user) {
     return user;
   }
-
-  @Get()
-  @ApiBearerAuth()
-  findAll() {
-    return this.usersService.findAll();
-  }
-
-  @Get(':id')
-  @ApiBearerAuth()
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
-  }
-
-  @Patch(':id')
-  @ApiBearerAuth()
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
-  }
-
-  @Delete(':id')
-  @ApiBearerAuth()
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
-  }
 }
