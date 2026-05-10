@@ -1,127 +1,27 @@
 import { useEffect, useMemo, useState } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import {
   AppHeader,
   Banner,
+  BuildItineraryPage,
   CreateTripPage,
   LandingToolbar,
   PlanTripButton,
   SectionHeader,
-  TripRow,
   TripCard,
+  TripRow,
 } from './components'
+import { API_URL, getAuthHeaders, readJson } from './utils/api'
 import { getToken } from './utils/auth'
-
-const API_URL = 'http://localhost:3000'
+import { getBudgetValue, mapRegionToCard, mapTripToCard } from './utils/trips'
 
 const defaultFilters = {
   search: '',
   groupBy: 'none',
   budget: 'all',
   sortBy: 'recommended',
-}
-
-const fallbackRegionImages = {
-  'Paris, France':
-    'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=900&q=80',
-  'Bali, Indonesia':
-    'https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?auto=format&fit=crop&w=900&q=80',
-  'Tokyo, Japan':
-    'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=900&q=80',
-  'New York, USA':
-    'https://images.unsplash.com/photo-1499092346589-b9b6be3e94b2?auto=format&fit=crop&w=900&q=80',
-  'Santorini, Greece':
-    'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=900&q=80',
-  'Nairobi, Kenya':
-    'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?auto=format&fit=crop&w=900&q=80',
-  'Barcelona, Spain':
-    'https://images.unsplash.com/photo-1583422409516-2895a77efded?auto=format&fit=crop&w=900&q=80',
-  Maldives:
-    'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=900&q=80',
-  'Rajasthan, India':
-    'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=900&q=80',
-  'Patagonia, Chile':
-    'https://images.unsplash.com/photo-1518509562904-e7ef99cdcc86?auto=format&fit=crop&w=900&q=80',
-  'Rome, Italy':
-    'https://images.unsplash.com/photo-1525874684015-58379d421a52?auto=format&fit=crop&w=900&q=80',
-  'Dubai, UAE':
-    'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=900&q=80',
-}
-
-const fallbackTripImage =
-  'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=900&q=80'
-
-const getBudgetValue = (item) => {
-  const numericValue = Number(item.price?.replace(/\D/g, ''))
-  return Number.isFinite(numericValue) && numericValue > 0 ? numericValue : null
-}
-
-const formatCompactDate = (value) =>
-  new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(new Date(value))
-
-const formatDateRange = (startDate, endDate) =>
-  `${formatCompactDate(startDate)} - ${formatCompactDate(endDate)}`
-
-const getDurationDays = (startDate, endDate) => {
-  const start = new Date(startDate)
-  const end = new Date(endDate)
-  const diffInMs = end.getTime() - start.getTime()
-  return Math.max(1, Math.round(diffInMs / (1000 * 60 * 60 * 24)) + 1)
-}
-
-const getRegionImage = (region) =>
-  region.images?.[0] || fallbackRegionImages[region.name] || fallbackTripImage
-
-const getTripImage = (trip) =>
-  trip.tripActivities?.find((item) => item.activity?.images?.[0])?.activity?.images?.[0] ||
-  trip.region?.images?.[0] ||
-  fallbackRegionImages[trip.region?.name] ||
-  fallbackTripImage
-
-const formatBudgetLabel = (amount) => `Rs ${Math.round(amount).toLocaleString('en-IN')}`
-
-const mapRegionToCard = (region) => ({
-  id: `region-${region.id}`,
-  title: region.name,
-  subtitle: region.description || 'Explore curated activities, local highlights, and trip ideas.',
-  meta: region.rating ? `Rated ${Number(region.rating).toFixed(1)} by travelers` : 'Region guide',
-  rating: region.rating ? Number(region.rating).toFixed(1) : '',
-  location: region.name.split(',').slice(-1)[0]?.trim() || 'Region',
-  price: '',
-  image: getRegionImage(region),
-})
-
-const mapTripToCard = (trip, timeline) => {
-  const totalBudget = trip.tripActivities?.reduce((sum, item) => {
-    const activityBudget = Number(item.budget)
-    return Number.isFinite(activityBudget) ? sum + activityBudget : sum
-  }, 0) ?? 0
-  const hasBudget = totalBudget > 0
-  const activityCount = trip.tripActivities?.length ?? 0
-  const durationDays = getDurationDays(trip.startDate, trip.endDate)
-
-  let meta = `${formatDateRange(trip.startDate, trip.endDate)}`
-  if (timeline === 'planned') meta = `Starts ${formatCompactDate(trip.startDate)}`
-  if (timeline === 'previous') meta = `Completed ${formatCompactDate(trip.endDate)}`
-  if (timeline === 'ongoing') meta = `In progress until ${formatCompactDate(trip.endDate)}`
-  if (hasBudget) meta = `${meta} - Budget ${formatBudgetLabel(totalBudget)}`
-
-  const averageRating = activityCount
-    ? trip.tripActivities.reduce((sum, item) => sum + Number(item.activity?.rating || 0), 0) / activityCount
-    : 0
-
-  return {
-    id: `trip-${trip.id}`,
-    title: trip.name || trip.region?.name || 'Untitled trip',
-    subtitle: `${durationDays} day${durationDays > 1 ? 's' : ''}, ${activityCount} planned activit${activityCount === 1 ? 'y' : 'ies'}.`,
-    meta,
-    rating: averageRating > 0 ? averageRating.toFixed(1) : '',
-    location: trip.region?.name || '',
-    price: hasBudget ? formatBudgetLabel(totalBudget) : '',
-    image: getTripImage(trip),
-  }
 }
 
 const matchesSearch = (item, search) => {
@@ -199,7 +99,7 @@ const getGroupedTitle = (title, items, groupBy) => {
 }
 
 function HomePage() {
-  const [activeScreen, setActiveScreen] = useState('home')
+  const navigate = useNavigate()
   const [filters, setFilters] = useState(defaultFilters)
   const [regions, setRegions] = useState([])
   const [tripGroups, setTripGroups] = useState({ ongoing: [], previous: [], planned: [] })
@@ -208,10 +108,6 @@ function HomePage() {
   const [tripsError, setTripsError] = useState(null)
 
   useEffect(() => {
-    if (activeScreen !== 'home') {
-      return
-    }
-
     const token = getToken()
     if (!token) {
       setHomeError('Please log in to view your trips.')
@@ -227,21 +123,17 @@ function HomePage() {
       setTripsError(null)
 
       try {
-        const headers = { Authorization: `Bearer ${token}` }
+        const headers = getAuthHeaders()
         const [regionsRes, tripsRes] = await Promise.allSettled([
           fetch(`${API_URL}/activity/regions`, { headers }),
           fetch(`${API_URL}/activity/my-trips`, { headers }),
         ])
 
-        if (regionsRes.status !== 'fulfilled') {
+        if (regionsRes.status !== 'fulfilled' || !regionsRes.value.ok) {
           throw new Error('Failed to load regions from the backend.')
         }
 
-        if (!regionsRes.value.ok) {
-          throw new Error('Failed to load regions from the backend.')
-        }
-
-        const regionsData = await regionsRes.value.json()
+        const regionsData = await readJson(regionsRes.value)
 
         if (ignore) {
           return
@@ -250,7 +142,7 @@ function HomePage() {
         setRegions(Array.isArray(regionsData) ? regionsData : [])
 
         if (tripsRes.status === 'fulfilled' && tripsRes.value.ok) {
-          const tripsData = await tripsRes.value.json()
+          const tripsData = await readJson(tripsRes.value)
 
           if (ignore) {
             return
@@ -281,7 +173,7 @@ function HomePage() {
     return () => {
       ignore = true
     }
-  }, [activeScreen])
+  }, [])
 
   const filteredRegions = useMemo(
     () => filterItems(
@@ -306,20 +198,16 @@ function HomePage() {
     [filters, tripGroups.previous],
   )
 
-  if (activeScreen === 'create-trip') {
-    return (
-      <main className="app-shell">
-        <section className="landing-page" aria-label="Create a new trip">
-          <CreateTripPage onHomeClick={() => setActiveScreen('home')} />
-        </section>
-      </main>
-    )
+  const openItinerary = (trip) => {
+    if (trip.tripId) {
+      navigate(`/trip/${trip.tripId}/itinerary`)
+    }
   }
 
   return (
     <main className="app-shell">
       <section className="landing-page" aria-label="Traveloop landing page">
-        <AppHeader onHomeClick={() => setActiveScreen('home')} />
+        <AppHeader onHomeClick={() => navigate('/home')} />
 
         <div className="landing-content">
           <Banner />
@@ -347,21 +235,24 @@ function HomePage() {
                 <TripRow
                   title={getGroupedTitle('Ongoing Trips', filteredOngoingTrips, filters.groupBy)}
                   trips={filteredOngoingTrips}
+                  onSelectTrip={openItinerary}
                 />
               )}
               <TripRow
                 title={getGroupedTitle('Upcoming Trips', filteredUpcomingTrips, filters.groupBy)}
                 trips={filteredUpcomingTrips}
+                onSelectTrip={openItinerary}
               />
               <TripRow
                 title={getGroupedTitle('Previous Trips', filteredPreviousTrips, filters.groupBy)}
                 trips={filteredPreviousTrips}
+                onSelectTrip={openItinerary}
               />
             </div>
           ) : null}
         </div>
 
-        <PlanTripButton onClick={() => setActiveScreen('create-trip')} />
+        <PlanTripButton onClick={() => navigate('/trip/new')} />
       </section>
     </main>
   )
@@ -371,10 +262,12 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/"         element={<Navigate to="/login" replace />} />
-        <Route path="/login"    element={<LoginPage />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/home"     element={<HomePage />} />
+        <Route path="/home" element={<HomePage />} />
+        <Route path="/trip/new" element={<CreateTripPage />} />
+        <Route path="/trip/:tripId/itinerary" element={<BuildItineraryPage />} />
       </Routes>
     </BrowserRouter>
   )

@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import AppHeader from './AppHeader'
 import DatePickerField from './DatePickerField'
-import { getToken } from '../utils/auth'
-
-const API_URL = 'http://localhost:3000'
+import { API_URL, getApiErrorMessage, getAuthHeaders, readJson } from '../utils/api'
 
 function CreateTripPage({ onHomeClick }) {
+  const navigate = useNavigate()
   const [tripName, setTripName] = useState('')
   const [regionId, setRegionId] = useState('')
   const [dates, setDates] = useState({
@@ -24,9 +24,9 @@ function CreateTripPage({ onHomeClick }) {
   // Fetch regions on mount
   useEffect(() => {
     fetch(`${API_URL}/activity/regions`, {
-      headers: { Authorization: `Bearer ${getToken()}` },
+      headers: getAuthHeaders(),
     })
-      .then((res) => res.json())
+      .then((res) => readJson(res))
       .then((data) => {
         if (Array.isArray(data)) setRegions(data)
       })
@@ -45,10 +45,10 @@ function CreateTripPage({ onHomeClick }) {
     
     try {
       const res = await fetch(`${API_URL}/activity?region_id=${regionId}`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
+        headers: getAuthHeaders(),
       })
       if (!res.ok) throw new Error('Failed to fetch activities')
-      const data = await res.json()
+      const data = await readJson(res)
       setActivities(data)
       setSelectedActivities(new Set()) // Reset selection when new activities load
     } catch (err) {
@@ -83,10 +83,7 @@ function CreateTripPage({ onHomeClick }) {
 
       const res = await fetch(`${API_URL}/activity/create-my-trip`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${getToken()}`
-        },
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           name: tripName || undefined,
           regionName: selectedRegion?.name,
@@ -96,12 +93,13 @@ function CreateTripPage({ onHomeClick }) {
         })
       })
       
+      const payload = await readJson(res)
+
       if (!res.ok) {
-        const errorData = await res.json()
-        throw new Error(errorData.message || 'Failed to create trip')
+        throw new Error(getApiErrorMessage(payload, 'Failed to create trip'))
       }
-      
-      onHomeClick() // Go back home on success
+
+      navigate(`/trip/${payload?.id}/itinerary`)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -111,7 +109,7 @@ function CreateTripPage({ onHomeClick }) {
 
   return (
     <>
-      <AppHeader onHomeClick={onHomeClick} />
+      <AppHeader onHomeClick={onHomeClick || (() => navigate('/home'))} />
 
       <div className="create-trip-content">
         <section className="create-trip-form-section" aria-labelledby="create-trip-title">
@@ -187,7 +185,7 @@ function CreateTripPage({ onHomeClick }) {
               <button 
                 type="submit" 
                 disabled={loadingActivities}
-                className="plan-trip-button px-6 font-bold bg-[#ffe36b] border-none text-[#111827] hover:bg-[#e6cc60] shadow-md transition-colors cursor-pointer"
+                className="trip-action-button trip-action-button-orange"
               >
                 {loadingActivities ? 'Loading...' : 'Recommend Activities'}
               </button>
@@ -205,7 +203,7 @@ function CreateTripPage({ onHomeClick }) {
               <button 
                 onClick={handleCreateTrip}
                 disabled={creatingTrip || selectedActivities.size === 0}
-                className="plan-trip-button px-6 font-bold bg-[#20a9f3] border-none text-white hover:bg-[#148ed2] shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="trip-action-button trip-action-button-orange"
               >
                 {creatingTrip ? 'Saving...' : `Create Trip (${selectedActivities.size} selected)`}
               </button>
@@ -221,13 +219,13 @@ function CreateTripPage({ onHomeClick }) {
                 
                 return (
                   <article 
-                    className={`suggestion-card cursor-pointer transition-transform hover:scale-[1.02] ${isSelected ? 'ring-4 ring-[#ff6846] rounded-[15px]' : ''}`} 
+                    className={`suggestion-card ${isSelected ? 'suggestion-card-selected' : ''}`}
                     key={activity.id}
                     onClick={() => toggleActivity(activity.id)}
                   >
-                    <div className="suggestion-image relative" style={{ backgroundImage: `url(${imageUrl})` }}>
+                    <div className="suggestion-image" style={{ backgroundImage: `url(${imageUrl})` }}>
                       {isSelected && (
-                        <div className="absolute top-3 right-3 w-8 h-8 bg-[#ff6846] rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                        <div className="suggestion-checkmark">
                           ✓
                         </div>
                       )}

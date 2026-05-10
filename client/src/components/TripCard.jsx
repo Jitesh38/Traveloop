@@ -1,6 +1,23 @@
-function TripCard({ item, variant = 'default' }) {
+function TripCard({ item, variant = 'default', onClick }) {
+  const cardProps = onClick
+    ? {
+        role: 'button',
+        tabIndex: 0,
+        onClick: () => onClick(item),
+        onKeyDown: (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            onClick(item)
+          }
+        },
+      }
+    : {}
+
   return (
-    <article className={`trip-card trip-card-${variant}`}>
+    <article
+      className={`trip-card trip-card-${variant} ${onClick ? 'trip-card-interactive' : ''}`}
+      {...cardProps}
+    >
       <div className="trip-image" style={{ backgroundImage: `url(${item.image})` }}>
         <div className="trip-badges">
           {item.rating && <span className="rating-badge">{item.rating}</span>}
