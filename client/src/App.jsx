@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import UserProfilePage from './pages/UserProfilePage'
 import {
   AppHeader,
   Banner,
@@ -278,6 +279,7 @@ function App() {
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/admin/users/:id" element={<AdminUserDetail />} />
+        <Route path="/profile"                 element={<UserProfilePage />} />
       </Routes>
     </BrowserRouter>
   )
