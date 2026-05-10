@@ -7,14 +7,20 @@ import {
   AppHeader,
   Banner,
   BuildItineraryPage,
+  ChecklistPage,
   CreateTripPage,
   ItineraryViewPage,
+  InvoicePage,
+  LandingToolbar,
   PlanTripButton,
   SectionHeader,
   TripCard,
   TripRow,
   UserTripListingPage,
 } from './components'
+import AdminDashboard from './components/admin/AdminDashboard'
+import AdminUsers from './components/admin/AdminUsers'
+import AdminUserDetail from './components/admin/AdminUserDetail'
 import { API_URL, getAuthHeaders, readJson } from './utils/api'
 import { getToken } from './utils/auth'
 import { getBudgetValue, mapRegionToCard, mapTripToCard } from './utils/trips'
@@ -181,6 +187,11 @@ function App() {
         <Route path="/trip/new" element={<CreateTripPage />} />
         <Route path="/trip/:tripId/itinerary" element={<BuildItineraryPage />} />
         <Route path="/trip/:tripId/itinerary-view" element={<ItineraryViewPage />} />
+        <Route path="/trip/:tripId/checklist" element={<ChecklistPage />} />
+        <Route path="/trip/:tripId/invoice" element={<InvoicePage />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/users" element={<AdminUsers />} />
+        <Route path="/admin/users/:id" element={<AdminUserDetail />} />
       </Routes>
     </BrowserRouter>
   )

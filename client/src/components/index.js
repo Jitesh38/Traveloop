@@ -1,4 +1,6 @@
 export { default as AppHeader } from './AppHeader'
+export { default as ChecklistPage } from './ChecklistPage'
+export { default as InvoicePage } from './InvoicePage'
 export { default as Banner } from './Banner'
 export { default as BuildItineraryPage } from './BuildItineraryPage'
 export { default as CreateTripPage } from './CreateTripPage'
