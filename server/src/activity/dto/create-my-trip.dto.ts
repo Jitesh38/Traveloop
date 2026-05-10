@@ -23,6 +23,15 @@ export class CreateMyTripDto {
   @MaxLength(200, { message: 'Name must not exceed 200 characters' })
   name?: string;
 
+  @ApiProperty({
+    example: 'Bali',
+    description: 'Region name. Looked up by name (case-insensitive) to resolve the region ID.',
+  })
+  @IsNotEmpty({ message: 'Region name is required' })
+  @IsString({ message: 'Region name must be a string' })
+  @MaxLength(100, { message: 'Region name must not exceed 100 characters' })
+  regionName: string;
+
   @ApiProperty({ example: '2026-06-01', description: 'Trip start date (YYYY-MM-DD)' })
   @IsNotEmpty({ message: 'Start date is required' })
   @IsDateString({}, { message: 'Start date must be a valid date (YYYY-MM-DD)' })
