@@ -1,7 +1,17 @@
-function AppHeader() {
+function AppHeader({ onHomeClick }) {
   return (
     <header className="app-header">
-      <a className="brand" href="/" aria-label="Traveloop home">
+      <a
+        className="brand"
+        href="/"
+        aria-label="Traveloop home"
+        onClick={(event) => {
+          if (onHomeClick) {
+            event.preventDefault()
+            onHomeClick()
+          }
+        }}
+      >
         <span className="brand-mark" aria-hidden="true" />
         Traveloop
       </a>

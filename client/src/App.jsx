@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import {
   AppHeader,
   Banner,
+  CreateTripPage,
   LandingToolbar,
   PlanTripButton,
   SectionHeader,
@@ -83,6 +84,7 @@ const getGroupedTitle = (title, items, groupBy) => {
 }
 
 function App() {
+  const [activeScreen, setActiveScreen] = useState('home')
   const [filters, setFilters] = useState(defaultFilters)
 
   const filteredRegions = useMemo(
@@ -98,10 +100,20 @@ function App() {
     [filters],
   )
 
+  if (activeScreen === 'create-trip') {
+    return (
+      <main className="app-shell">
+        <section className="landing-page" aria-label="Create a new trip">
+          <CreateTripPage onHomeClick={() => setActiveScreen('home')} />
+        </section>
+      </main>
+    )
+  }
+
   return (
     <main className="app-shell">
       <section className="landing-page" aria-label="Traveloop landing page">
-        <AppHeader />
+        <AppHeader onHomeClick={() => setActiveScreen('home')} />
 
         <div className="landing-content">
           <Banner />
@@ -131,7 +143,7 @@ function App() {
           </div>
         </div>
 
-        <PlanTripButton />
+        <PlanTripButton onClick={() => setActiveScreen('create-trip')} />
       </section>
     </main>
   )
