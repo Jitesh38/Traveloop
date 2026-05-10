@@ -9,12 +9,14 @@ import {
   BuildItineraryPage,
   ChecklistPage,
   CreateTripPage,
+  ItineraryViewPage,
   InvoicePage,
   LandingToolbar,
   PlanTripButton,
   SectionHeader,
   TripCard,
   TripRow,
+  UserTripListingPage,
 } from './components'
 import AdminDashboard from './components/admin/AdminDashboard'
 import AdminUsers from './components/admin/AdminUsers'
@@ -22,91 +24,11 @@ import AdminUserDetail from './components/admin/AdminUserDetail'
 import { API_URL, getAuthHeaders, readJson } from './utils/api'
 import { getToken } from './utils/auth'
 import { getBudgetValue, mapRegionToCard, mapTripToCard } from './utils/trips'
-
-const defaultFilters = {
-  search: '',
-  groupBy: 'none',
-  budget: 'all',
-  sortBy: 'recommended',
-}
-
-const matchesSearch = (item, search) => {
-  const query = search.trim().toLowerCase()
-
-  if (!query) {
-    return true
-  }
-
-  return [item.title, item.subtitle, item.meta, item.location]
-    .filter(Boolean)
-    .some((value) => value.toLowerCase().includes(query))
-}
-
-const matchesBudget = (item, budget) => {
-  const value = getBudgetValue(item)
-
-  if (budget !== 'all' && value === null) {
-    return false
-  }
-
-  if (budget === 'under-10') {
-    return value < 10
-  }
-
-  if (budget === '10-20') {
-    return value >= 10 && value <= 20
-  }
-
-  if (budget === '20-plus') {
-    return value > 20
-  }
-
-  return true
-}
-
-const sortItems = (items, sortBy) => {
-  const sortedItems = [...items]
-  const sortableBudget = (item, direction) => {
-    const value = getBudgetValue(item)
-    if (value === null) {
-      return direction === 'low' ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY
-    }
-    return value
-  }
-
-  if (sortBy === 'budget-low') {
-    return sortedItems.sort((a, b) => sortableBudget(a, 'low') - sortableBudget(b, 'low'))
-  }
-
-  if (sortBy === 'budget-high') {
-    return sortedItems.sort((a, b) => sortableBudget(b, 'high') - sortableBudget(a, 'high'))
-  }
-
-  if (sortBy === 'rating') {
-    return sortedItems.sort((a, b) => Number(b.rating) - Number(a.rating))
-  }
-
-  return sortedItems
-}
-
-const filterItems = (items, filters) =>
-  sortItems(
-    items.filter((item) => matchesSearch(item, filters.search) && matchesBudget(item, filters.budget)),
-    filters.sortBy,
-  )
-
-const getGroupedTitle = (title, items, groupBy) => {
-  if (groupBy !== 'state' || items.length === 0) {
-    return title
-  }
-
-  const locations = [...new Set(items.map((item) => item.location))]
-  return `${title} by State (${locations.join(', ')})`
-}
+import { defaultTripFilters, filterItems, getGroupedTitle } from './utils/tripFilters'
 
 function HomePage() {
   const navigate = useNavigate()
-  const [filters, setFilters] = useState(defaultFilters)
+  const [filters, setFilters] = useState(defaultTripFilters)
   const [regions, setRegions] = useState([])
   const [tripGroups, setTripGroups] = useState({ ongoing: [], previous: [], planned: [] })
   const [loadingHome, setLoadingHome] = useState(true)
@@ -206,7 +128,7 @@ function HomePage() {
 
   const openItinerary = (trip) => {
     if (trip.tripId) {
-      navigate(`/trip/${trip.tripId}/itinerary`)
+      navigate(`/trip/${trip.tripId}/itinerary-view`)
     }
   }
 
@@ -217,7 +139,7 @@ function HomePage() {
 
         <div className="landing-content">
           <Banner />
-          <LandingToolbar filters={filters} onFiltersChange={setFilters} />
+          {/* <LandingToolbar filters={filters} onFiltersChange={setFilters} /> */}
 
           {homeError && <p className="empty-row">{homeError}</p>}
           {tripsError && <p className="empty-row">{tripsError}</p>}
@@ -237,21 +159,9 @@ function HomePage() {
           <SectionHeader title="Your Trips" />
           {!loadingHome ? (
             <div className="your-trips" aria-label="Your trips">
-              {filteredOngoingTrips.length > 0 && (
-                <TripRow
-                  title={getGroupedTitle('Ongoing Trips', filteredOngoingTrips, filters.groupBy)}
-                  trips={filteredOngoingTrips}
-                  onSelectTrip={openItinerary}
-                />
-              )}
               <TripRow
                 title={getGroupedTitle('Upcoming Trips', filteredUpcomingTrips, filters.groupBy)}
                 trips={filteredUpcomingTrips}
-                onSelectTrip={openItinerary}
-              />
-              <TripRow
-                title={getGroupedTitle('Previous Trips', filteredPreviousTrips, filters.groupBy)}
-                trips={filteredPreviousTrips}
                 onSelectTrip={openItinerary}
               />
             </div>
@@ -272,14 +182,16 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/home" element={<HomePage />} />
+        <Route path="/profile" element={<UserProfilePage />} />
+        <Route path="/trips" element={<UserTripListingPage />} />
         <Route path="/trip/new" element={<CreateTripPage />} />
         <Route path="/trip/:tripId/itinerary" element={<BuildItineraryPage />} />
+        <Route path="/trip/:tripId/itinerary-view" element={<ItineraryViewPage />} />
         <Route path="/trip/:tripId/checklist" element={<ChecklistPage />} />
         <Route path="/trip/:tripId/invoice" element={<InvoicePage />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/admin/users/:id" element={<AdminUserDetail />} />
-        <Route path="/profile"                 element={<UserProfilePage />} />
       </Routes>
     </BrowserRouter>
   )
