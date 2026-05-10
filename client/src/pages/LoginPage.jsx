@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { saveSession } from '../utils/auth'
 
 // Palette: #767f9e | #daa464 | #dec384 | #e8ddb4
+const API_URL = 'http://localhost:3000'
 
 const RULES = {
-  username: [
-    { test: (v) => v.trim().length > 0,              msg: 'Username is required.' },
-    { test: (v) => v.trim().length >= 3,             msg: 'Username must be at least 3 characters.' },
-    { test: (v) => /^[a-zA-Z0-9._@]+$/.test(v.trim()), msg: 'Only letters, numbers, . _ @ allowed.' },
+  email: [
+    { test: (v) => v.trim().length > 0,                                       msg: 'Email is required.' },
+    { test: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()),              msg: 'Enter a valid email address.' },
   ],
   password: [
     { test: (v) => v.length > 0,  msg: 'Password is required.' },
@@ -30,10 +31,12 @@ function validate(fields) {
 
 export default function LoginPage() {
   const navigate = useNavigate()
-  const [fields, setFields]         = useState({ username: '', password: '' })
-  const [errors, setErrors]         = useState({})
-  const [touched, setTouched]       = useState({})
+  const [fields, setFields]             = useState({ email: '', password: '' })
+  const [errors, setErrors]             = useState({})
+  const [touched, setTouched]           = useState({})
   const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading]           = useState(false)
+  const [apiError, setApiError]         = useState(null)
 
   function handleChange(e) {
     const { name, value } = e.target
@@ -52,14 +55,48 @@ export default function LoginPage() {
     setErrors((prev) => ({ ...prev, [name]: errs[name] }))
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    setTouched({ username: true, password: true })
+    setApiError(null)
+    setTouched({ email: true, password: true })
     const errs = validate(fields)
     setErrors(errs)
-    if (Object.keys(errs).length === 0) {
-      // TODO: replace with NestJS auth API call
-      navigate('/home')
+    if (Object.keys(errs).length > 0) return
+
+    setLoading(true)
+    try {
+      let res
+      try {
+        res = await fetch(`${API_URL}/users/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: fields.email.trim(), password: fields.password }),
+        })
+      } catch {
+        setApiError('Cannot connect to server. Make sure the backend is running.')
+        return
+      }
+
+      let data = null
+      try { data = await res.json() } catch { /* non-JSON body */ }
+
+      if (res.status === 200) {
+        saveSession(data.accessToken, data.user)
+        navigate('/home')
+        return
+      }
+      if (res.status === 401) {
+        setApiError('Invalid email or password. Please try again.')
+        return
+      }
+      const msg = Array.isArray(data?.message)
+        ? data.message.join(' • ')
+        : (data?.message ?? `Server error (${res.status}).`)
+      setApiError(msg)
+    } catch (err) {
+      setApiError(`Unexpected error: ${err?.message ?? 'Unknown'}`)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -84,24 +121,34 @@ export default function LoginPage() {
           <p className="text-sm text-[#767f9e] mt-1">Plan your perfect journey</p>
         </div>
 
+        {/* API error banner */}
+        {apiError && (
+          <div className="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-300 text-red-600 text-sm flex items-start gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            {apiError}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
-          {/* Username */}
+          {/* Email */}
           <div>
-            <label htmlFor="username" className="block text-sm font-semibold text-[#767f9e] mb-1">
-              Username
+            <label htmlFor="email" className="block text-sm font-semibold text-[#767f9e] mb-1">
+              Email
             </label>
             <input
-              id="username"
-              name="username"
-              type="text"
-              autoComplete="username"
-              value={fields.username}
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              value={fields.email}
               onChange={handleChange}
               onBlur={handleBlur}
-              placeholder="Enter your username"
-              className={inputCls('username')}
+              placeholder="you@email.com"
+              className={inputCls('email')}
             />
-            {errors.username && touched.username && <ErrorMsg msg={errors.username} />}
+            {errors.email && touched.email && <ErrorMsg msg={errors.email} />}
           </div>
 
           {/* Password */}
@@ -152,9 +199,16 @@ export default function LoginPage() {
           {/* Submit */}
           <button
             type="submit"
-            className="w-full py-2.5 rounded-lg bg-[#e8ddb4] hover:bg-[#d6c99d] active:bg-[#c4b88c] text-[#767f9e] font-bold text-sm tracking-wide shadow-md hover:shadow-lg transition-all"
+            disabled={loading}
+            className="w-full py-2.5 rounded-lg bg-[#e8ddb4] hover:bg-[#d6c99d] active:bg-[#c4b88c] disabled:opacity-60 disabled:cursor-not-allowed text-[#767f9e] font-bold text-sm tracking-wide shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
           >
-            Login
+            {loading && (
+              <svg className="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+              </svg>
+            )}
+            {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
 
