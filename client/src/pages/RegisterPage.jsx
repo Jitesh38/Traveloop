@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import PhotoUpload from '../components/auth/PhotoUpload'
 import { COUNTRY_CODES, DEFAULT_COUNTRY, phoneErrorMsg } from '../data/countryCodes'
+import { saveSession } from '../utils/auth'
 
 // Palette: #767f9e | #daa464 | #dec384 | #e8ddb4
 const API_URL = 'http://localhost:3000'
@@ -180,7 +181,8 @@ export default function RegisterPage() {
       try { data = await res.json() } catch { /* non-JSON body, data stays null */ }
 
       if (res.status === 201) {
-        navigate('/login')
+        saveSession(data.accessToken, data.user)
+        navigate('/home')
         return
       }
       if (res.status === 409) {
