@@ -261,24 +261,26 @@ function BuildItineraryPage() {
               </p>
             </div>
             <div className="itinerary-summary-card">
-              <strong>Trip #{tripId}</strong>
-              <span>{sectionCountLabel}</span>
-              <button
-                type="button"
-                className="trip-action-button trip-action-button-soft-orange"
-                style={{ marginTop: 8, width: '100%' }}
-                onClick={() => navigate(`/trip/${tripId}/checklist`)}
-              >
-                Packing Checklist
-              </button>
-              <button
-                type="button"
-                className="trip-action-button trip-action-button-soft-orange"
-                style={{ marginTop: 8, width: '100%' }}
-                onClick={() => navigate(`/trip/${tripId}/invoice`)}
-              >
-                View Invoice
-              </button>
+              <div className="itinerary-summary-copy">
+                <strong>Trip #{tripId}</strong>
+                <span>{sectionCountLabel}</span>
+              </div>
+              <div className="itinerary-summary-actions">
+                <button
+                  type="button"
+                  className="trip-action-button trip-action-button-soft-orange"
+                  onClick={() => navigate(`/trip/${tripId}/checklist`)}
+                >
+                  Packing Checklist
+                </button>
+                <button
+                  type="button"
+                  className="trip-action-button trip-action-button-soft-orange"
+                  onClick={() => navigate(`/trip/${tripId}/invoice`)}
+                >
+                  View Invoice
+                </button>
+              </div>
             </div>
           </div>
 

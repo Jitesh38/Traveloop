@@ -47,8 +47,8 @@ function CreateTripPage({ onHomeClick }) {
       const res = await fetch(`${API_URL}/activity?region_id=${regionId}`, {
         headers: getAuthHeaders(),
       })
-      if (!res.ok) throw new Error('Failed to fetch activities')
       const data = await readJson(res)
+      if (!res.ok) throw new Error(getApiErrorMessage(data, 'Failed to fetch activities'))
       setActivities(data)
       setSelectedActivities(new Set()) // Reset selection when new activities load
     } catch (err) {

@@ -1274,7 +1274,7 @@ button {
 
 .itinerary-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 260px;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
   gap: 24px;
   align-items: end;
 }
@@ -1306,12 +1306,10 @@ button {
 }
 
 .itinerary-summary-card {
-  min-height: 84px;
-  padding: 18px 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  min-height: 140px;
+  padding: 20px 22px;
+  display: grid;
+  gap: 18px;
   border: 1px solid var(--line);
   border-radius: 20px;
   background:
@@ -1319,17 +1317,32 @@ button {
   box-shadow: 0 16px 38px rgba(17, 24, 39, 0.08);
 }
 
+.itinerary-summary-copy {
+  display: grid;
+  gap: 6px;
+}
+
 .itinerary-summary-card strong {
   color: var(--ink);
-  font-size: 1.1rem;
+  font-size: 1.8rem;
   font-weight: 950;
+  line-height: 1.05;
 }
 
 .itinerary-summary-card span {
   color: var(--orange);
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 900;
-  text-align: right;
+}
+
+.itinerary-summary-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.itinerary-summary-actions .trip-action-button {
+  width: 100%;
 }
 
 .itinerary-success {
@@ -3231,6 +3244,10 @@ button {
 
   .itinerary-save-button {
     width: 100%;
+  }
+
+  .itinerary-summary-actions {
+    grid-template-columns: 1fr;
   }
 }
 
