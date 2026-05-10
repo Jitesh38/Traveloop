@@ -12,8 +12,5 @@ export default new DataSource({
     database: process.env.DB_DATABASE_WRITE,
     entities: ['src/**/**/*.entity{.ts,.js}'],
     migrations: ['shared-db/migrations/*{.js,.ts}'],
-    synchronize: false,
-    // ssl: {
-    //     rejectUnauthorized: false,
-    // },
+    synchronize: false
 });
