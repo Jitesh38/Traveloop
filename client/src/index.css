@@ -1,1 +1,941 @@
 @import "tailwindcss";
+:root {
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #111827;
+  background: #f2f7fb;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --ink: #111827;
+  --muted: #8894a5;
+  --line: #e9eef5;
+  --surface: #ffffff;
+  --blue: #20a9f3;
+  --blue-dark: #148ed2;
+  --orange: #ff6846;
+  --yellow: #ffe36b;
+  --shadow: 0 22px 58px rgba(17, 24, 39, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.app-shell {
+  min-height: 100vh;
+  padding: 24px;
+  display: grid;
+  place-items: center;
+}
+
+.landing-page {
+  width: min(1360px, 100%);
+  min-height: min(940px, calc(100vh - 48px));
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.app-header {
+  height: 84px;
+  padding: 0 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  font-size: 1.28rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.brand-mark {
+  width: 32px;
+  height: 20px;
+  position: relative;
+  display: inline-block;
+}
+
+.brand-mark::before,
+.brand-mark::after {
+  position: absolute;
+  content: "";
+  border-radius: 999px;
+  background: var(--orange);
+}
+
+.brand-mark::before {
+  width: 26px;
+  height: 15px;
+  left: 2px;
+  top: 3px;
+  transform: rotate(-18deg);
+}
+
+.brand-mark::after {
+  width: 16px;
+  height: 16px;
+  right: 0;
+  top: 2px;
+  background: #ff4f2d;
+  transform: rotate(28deg);
+}
+
+.avatar-button {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #dfe6ef;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.avatar-button span {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0)),
+    url("https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80")
+      center/cover;
+}
+
+.landing-content {
+  padding: 34px 48px 132px;
+}
+
+.banner {
+  height: 360px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  padding: 34px;
+  border-radius: 18px;
+  background:
+    linear-gradient(90deg, rgba(8, 25, 36, 0.72), rgba(8, 25, 36, 0.18)),
+    url("https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1800&q=90")
+      center 45%/cover;
+}
+
+.banner-copy {
+  max-width: 540px;
+  color: #fff;
+}
+
+.banner-kicker {
+  display: inline-flex;
+  margin-bottom: 12px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  color: #111827;
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0;
+}
+
+.banner-copy h1 {
+  max-width: 480px;
+  margin: 0;
+  font-size: clamp(2.25rem, 5vw, 4.4rem);
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 0.96;
+}
+
+.banner-copy p {
+  max-width: 430px;
+  margin: 16px 0 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 1.02rem;
+  line-height: 1.5;
+}
+
+.toolbar {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+}
+
+.search-field input,
+.secondary-button,
+.plan-trip-button {
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--ink);
+}
+
+.search-field input {
+  width: 100%;
+  padding: 0 18px;
+  outline: none;
+  font-size: 0.92rem;
+  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.04);
+}
+
+.search-field input:focus {
+  border-color: #8bd5fb;
+  box-shadow: 0 0 0 4px rgba(32, 169, 243, 0.12);
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.toolbar-menu {
+  position: relative;
+}
+
+.secondary-button {
+  min-width: 146px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  font-weight: 850;
+  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.04);
+}
+
+.secondary-button span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.secondary-button strong {
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.secondary-button::after {
+  width: 7px;
+  height: 7px;
+  margin-top: -4px;
+  content: "";
+  border-right: 2px solid var(--orange);
+  border-bottom: 2px solid var(--orange);
+  transform: rotate(45deg);
+}
+
+.secondary-button:hover,
+.plan-trip-button:hover {
+  border-color: #b8dff6;
+  background: #f8fcff;
+}
+
+.dropdown-menu {
+  min-width: 190px;
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 10;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 18px 40px rgba(17, 24, 39, 0.14);
+}
+
+.dropdown-option {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 750;
+  text-align: left;
+}
+
+.dropdown-option:hover,
+.dropdown-option.active {
+  background: #f2f7fb;
+}
+
+.dropdown-option.active {
+  color: var(--blue-dark);
+}
+
+.section-header {
+  margin-top: 44px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 22px;
+}
+
+.section-header h2 {
+  margin: 0;
+  position: relative;
+  color: var(--ink);
+  font-size: clamp(1.55rem, 3vw, 2.2rem);
+  font-weight: 950;
+  line-height: 1.05;
+}
+
+.section-header h2::after {
+  width: 112px;
+  height: 10px;
+  position: absolute;
+  left: -6px;
+  bottom: -3px;
+  z-index: -1;
+  content: "";
+  background: var(--yellow);
+}
+
+.section-header span {
+  height: 2px;
+  background: #202632;
+  opacity: 0.88;
+}
+
+.regional-grid,
+.trip-grid {
+  display: flex;
+  gap: 34px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0 4px 18px;
+  scroll-behavior: smooth;
+  scroll-padding-inline: 4px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.regional-grid {
+  margin-top: 30px;
+}
+
+.trip-grid {
+  margin-top: 32px;
+}
+
+.regional-grid::-webkit-scrollbar,
+.trip-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.your-trips {
+  margin-top: 28px;
+  display: grid;
+  gap: 42px;
+}
+
+.trip-row-title {
+  margin: 0;
+  color: var(--ink);
+  font-size: 1.12rem;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.empty-row {
+  margin: 18px 0 0;
+  padding: 18px 20px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 750;
+}
+
+.create-trip-content {
+  padding: 34px 48px 56px;
+}
+
+.create-trip-form-section,
+.suggestions-section {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 14px 36px rgba(17, 24, 39, 0.07);
+}
+
+.create-trip-heading,
+.suggestions-heading {
+  padding: 22px 26px;
+  border-bottom: 1px solid var(--line);
+}
+
+.create-trip-heading span {
+  display: inline-flex;
+  margin-bottom: 7px;
+  color: var(--orange);
+  font-size: 0.82rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.create-trip-heading h1,
+.suggestions-heading h2,
+.suggestion-body h3 {
+  margin: 0;
+  color: var(--ink);
+}
+
+.create-trip-heading h1 {
+  font-size: clamp(1.65rem, 3vw, 2.35rem);
+  font-weight: 950;
+}
+
+.trip-form {
+  max-width: 780px;
+  padding: 24px 26px 52px;
+  display: grid;
+  gap: 16px;
+}
+
+.trip-field {
+  display: grid;
+  grid-template-columns: 170px minmax(260px, 1fr);
+  align-items: center;
+  gap: 18px;
+}
+
+.trip-field span {
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.field-control {
+  position: relative;
+}
+
+.trip-field input {
+  width: 100%;
+  height: 46px;
+  padding: 0 15px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  outline: none;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.04);
+}
+
+.trip-field input:focus {
+  border-color: #8bd5fb;
+  box-shadow: 0 0 0 4px rgba(32, 169, 243, 0.12);
+}
+
+.custom-date-picker {
+  position: relative;
+}
+
+.date-trigger {
+  width: 100%;
+  height: 46px;
+  padding: 0 15px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.04);
+}
+
+.date-trigger.active,
+.date-trigger:focus-visible {
+  border-color: #8bd5fb;
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(32, 169, 243, 0.12);
+}
+
+.date-trigger span:first-child {
+  color: var(--orange);
+  font-size: 1rem;
+  font-weight: 750;
+}
+
+.calendar-popover {
+  width: 316px;
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 60;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 24px 52px rgba(17, 24, 39, 0.18);
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.calendar-header strong {
+  color: var(--ink);
+  font-size: 1.08rem;
+  font-weight: 950;
+}
+
+.calendar-header button {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: #f8fcff;
+  color: var(--ink);
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.calendar-header button:hover {
+  border-color: #8bd5fb;
+}
+
+.calendar-weekdays,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-weekdays {
+  margin-top: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.calendar-weekdays span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.calendar-grid {
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.calendar-day:hover {
+  background: #f2f7fb;
+}
+
+.calendar-day.muted {
+  color: #c3cad7;
+}
+
+.calendar-day.selected {
+  background: var(--orange);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(255, 104, 70, 0.28);
+}
+
+.suggestions-section {
+  margin-top: 34px;
+  overflow: hidden;
+}
+
+.suggestions-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.suggestions-heading h2 {
+  font-size: clamp(1.25rem, 2.4vw, 1.85rem);
+  font-weight: 950;
+}
+
+.suggestions-heading p {
+  max-width: 440px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+.suggestion-grid {
+  padding: 28px 34px 36px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 30px;
+}
+
+.suggestion-card {
+  min-width: 0;
+}
+
+.suggestion-image {
+  min-height: 210px;
+  border-radius: 15px;
+  background-color: #e8eef4;
+  background-position: center;
+  background-size: cover;
+  box-shadow: 0 16px 36px rgba(17, 24, 39, 0.1);
+}
+
+.suggestion-body {
+  padding-top: 14px;
+}
+
+.suggestion-body span {
+  color: var(--orange);
+  font-size: 0.78rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.suggestion-body h3 {
+  margin-top: 6px;
+  overflow: hidden;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.42rem;
+  line-height: 1.08;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suggestion-body p {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.trip-row .trip-grid {
+  margin-top: 18px;
+}
+
+.your-trips .trip-image {
+  min-height: 260px;
+}
+
+.trip-card {
+  min-width: 0;
+  flex: 0 0 clamp(350px, calc((100% - 68px) / 3), 430px);
+  overflow: hidden;
+  background: #fff;
+  scroll-snap-align: start;
+}
+
+.regional-grid .trip-card {
+  flex-basis: clamp(220px, calc((100% - 136px) / 5), 260px);
+}
+
+.trip-image {
+  min-height: 310px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 15px;
+  background-color: #e8eef4;
+  background-position: center;
+  background-size: cover;
+  box-shadow: 0 16px 36px rgba(17, 24, 39, 0.1);
+  transition:
+    filter 160ms ease,
+    transform 160ms ease;
+}
+
+.trip-card:hover .trip-image {
+  filter: saturate(1.08);
+  transform: translateY(-2px);
+}
+
+.trip-card-compact .trip-image {
+  min-height: 176px;
+}
+
+.trip-badges {
+  position: absolute;
+  inset: 14px 14px auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rating-badge,
+.location-badge {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.rating-badge {
+  padding: 0 10px 0 31px;
+  position: relative;
+  background: rgba(17, 24, 39, 0.42);
+}
+
+.rating-badge::before {
+  width: 21px;
+  height: 21px;
+  position: absolute;
+  left: 4px;
+  content: "";
+  border-radius: 50%;
+  background: var(--yellow);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.08);
+}
+
+.location-badge {
+  max-width: none;
+  padding: 0 10px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.24);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  backdrop-filter: blur(10px);
+}
+
+.trip-details {
+  padding-top: 18px;
+}
+
+.trip-title-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.trip-title-row h3 {
+  margin: 0;
+  overflow: hidden;
+  color: #1f2937;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.4rem, 2.4vw, 2rem);
+  line-height: 1.02;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trip-card-compact .trip-title-row h3 {
+  font-size: 1.05rem;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-weight: 900;
+}
+
+.trip-title-row span {
+  color: var(--orange);
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.trip-card-compact .trip-title-row span {
+  font-size: 0.86rem;
+}
+
+.trip-card p {
+  margin: 12px 0 0;
+  color: #a0a9b6;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.trip-card-compact p {
+  display: none;
+}
+
+.trip-meta {
+  display: block;
+  margin-top: 8px;
+  color: #697386;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.trip-card-compact .trip-meta {
+  display: none;
+}
+
+.plan-trip-button {
+  min-width: 188px;
+  position: absolute;
+  right: 48px;
+  bottom: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--orange);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 900;
+  box-shadow: 0 16px 26px rgba(255, 104, 70, 0.24);
+}
+
+.plan-trip-button:hover {
+  background: #eb5635;
+}
+
+.plan-trip-button span {
+  width: 18px;
+  height: 18px;
+  position: relative;
+}
+
+.plan-trip-button span::before,
+.plan-trip-button span::after {
+  position: absolute;
+  inset: 50% auto auto 0;
+  width: 100%;
+  height: 2px;
+  content: "";
+  border-radius: 999px;
+  background: currentColor;
+  transform: translateY(-50%);
+}
+
+.plan-trip-button span::after {
+  transform: translateY(-50%) rotate(90deg);
+}
+
+.sr-only {
+  width: 1px;
+  height: 1px;
+  position: absolute;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    padding: 0;
+    place-items: stretch;
+  }
+
+  .landing-page {
+    min-height: 100vh;
+    border-radius: 0;
+  }
+
+  .landing-content,
+  .app-header,
+  .create-trip-content {
+    padding-inline: 20px;
+  }
+
+  .toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .regional-grid .trip-card {
+    flex-basis: 260px;
+  }
+
+  .trip-grid .trip-card {
+    flex-basis: min(420px, 82vw);
+  }
+
+  .suggestions-heading {
+    display: block;
+  }
+
+  .suggestions-heading p {
+    margin-top: 10px;
+  }
+
+  .suggestion-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding-inline: 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .banner {
+    height: 280px;
+    border-radius: 16px;
+  }
+
+  .toolbar-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .secondary-button {
+    min-width: 0;
+    padding: 0 10px;
+    font-size: 0.82rem;
+  }
+
+  .regional-grid .trip-card,
+  .trip-grid .trip-card {
+    flex-basis: 84vw;
+  }
+
+  .trip-field {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .suggestion-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .trip-card-compact .trip-image,
+  .trip-image {
+    min-height: 230px;
+  }
+
+  .plan-trip-button {
+    right: 20px;
+    bottom: 20px;
+  }
+}
