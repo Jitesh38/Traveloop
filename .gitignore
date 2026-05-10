@@ -42,3 +42,8 @@ coverage/
 # ── Temp ──
 .temp/
 .tmp/
+
+# ── Local dev assets (private, do not commit) ──
+design-assets/
+notes/
+mockups/
