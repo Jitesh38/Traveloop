@@ -1,4 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus, Query, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, HttpStatus, Query, ParseIntPipe, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ActivityService } from './activity.service';
 import { CreateActivityDto } from './dto/create-activity.dto';
@@ -103,18 +104,51 @@ export class ActivityController {
     );
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.activityService.findOne(+id);
+  @Get('invoice/:tripId')
+  @ApiOperation({
+    summary: 'Generate a sales invoice for a trip',
+    description:
+      'Calculates line items as pricePerDay × trip duration for each activity. ' +
+      'Applies 5% tax on the subtotal. Only accessible by the trip owner.',
+  })
+  @ApiParam({ name: 'tripId', type: Number })
+  @ApiResponse({ status: 200, description: 'Invoice generated successfully' })
+  @ApiResponse({ status: 403, description: 'Not the owner of this trip' })
+  @ApiResponse({ status: 404, description: 'Trip not found' })
+  getInvoice(@Param('tripId', ParseIntPipe) tripId: number, @CurrentUser() user) {
+    return this.activityService.getInvoice(tripId, user.sub);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateActivityDto: UpdateActivityDto) {
-    return this.activityService.update(+id, updateActivityDto);
+  @Patch('invoice/:tripId/mark-paid')
+  @ApiOperation({ summary: 'Mark a trip invoice as paid or unpaid (owner only)' })
+  @ApiParam({ name: 'tripId', type: Number })
+  @ApiResponse({ status: 200, description: 'Payment status updated' })
+  @ApiResponse({ status: 403, description: 'Not the owner of this trip' })
+  @ApiResponse({ status: 404, description: 'Trip not found' })
+  markAsPaid(
+    @Param('tripId', ParseIntPipe) tripId: number,
+    @Body('isPaid') isPaid: boolean,
+    @CurrentUser() user,
+  ) {
+    return this.activityService.markAsPaid(tripId, isPaid, user.sub);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.activityService.remove(+id);
+  @Get('invoice/:tripId/download')
+  @ApiOperation({ summary: 'Download invoice as PDF (owner only)' })
+  @ApiParam({ name: 'tripId', type: Number })
+  @ApiResponse({ status: 200, description: 'PDF file stream' })
+  @ApiResponse({ status: 403, description: 'Not the owner of this trip' })
+  @ApiResponse({ status: 404, description: 'Trip not found' })
+  async downloadInvoice(
+    @Param('tripId', ParseIntPipe) tripId: number,
+    @CurrentUser() user,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="invoice-trip-${tripId}.pdf"`,
+    });
+    return this.activityService.downloadInvoice(tripId, user.sub);
   }
+
 }
