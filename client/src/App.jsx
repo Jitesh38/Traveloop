@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import UserProfilePage from './pages/UserProfilePage'
+
 import {
   AppHeader,
   Banner,
@@ -265,7 +267,9 @@ function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/home"     element={<HomePlaceholder />} />
         <Route path="/home" element={<HomePage />} />
+        <Route path="/profile"  element={<UserProfilePage />} />
         <Route path="/trip/new" element={<CreateTripPage />} />
         <Route path="/trip/:tripId/itinerary" element={<BuildItineraryPage />} />
       </Routes>
