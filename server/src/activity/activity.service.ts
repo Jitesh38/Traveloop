@@ -197,48 +197,50 @@ export class ActivityService {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException(`User with id ${userId} not found`);
 
-    // 3. Trip duration (inclusive: Jun 1 → Jun 5 = 5 days)
-    const start = new Date(trip.startDate);
-    const end   = new Date(trip.endDate);
-    const durationDays =
-      Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-
-    // 4. Load trip activities with activity details
+    // 3. Load trip activities with activity details
     const tripActivities = await this.tripActivityRepo.find({
       where: { myTripId: tripId },
       relations: ['activity'],
       order: { id: 'ASC' },
     });
 
-    // 5. Build line items
+    // 4. Build line items
+    //    Duration comes from each trip-activity's own totalHours (startDateTime→endDateTime).
+    //    If the user hasn't set times yet, totalHours = 0 → fall back to 1 day so price isn't $0.
     const TAX_RATE = 0.05;
 
     const lineItems = tripActivities.map((ta) => {
-      const pricePerDay = parseFloat(ta.activity.pricePerDay as any) || 0;
-      const lineTotal   = parseFloat((pricePerDay * durationDays).toFixed(2));
+      const pricePerDay  = parseFloat(ta.activity.pricePerDay as any) || 0;
+      const totalHours   = parseFloat(ta.totalHours as any) || 0;
+      const durationDays = totalHours > 0
+        ? parseFloat((totalHours / 24).toFixed(2))
+        : 1;
+      const lineTotal    = parseFloat((pricePerDay * durationDays).toFixed(2));
       return {
-        activityId:   ta.activity.id,
-        name:         ta.activity.name,
-        type:         ta.activity.type,
+        activityId:    ta.activity.id,
+        name:          ta.activity.name,
+        type:          ta.activity.type,
         pricePerDay,
+        totalHours,
         durationDays,
+        startDateTime: ta.startDateTime ?? null,
+        endDateTime:   ta.endDateTime   ?? null,
         lineTotal,
       };
     });
 
-    // 6. Summary
+    // 5. Summary
     const subtotal   = parseFloat(lineItems.reduce((sum, l) => sum + l.lineTotal, 0).toFixed(2));
     const taxAmount  = parseFloat((subtotal * TAX_RATE).toFixed(2));
     const grandTotal = parseFloat((subtotal + taxAmount).toFixed(2));
 
     return {
-      tripId:      trip.id,
-      tripName:    trip.name,
-      region:      trip.region.name,
-      startDate:   trip.startDate,
-      endDate:     trip.endDate,
-      durationDays,
-      isPaid:      trip.isPaid,
+      tripId:    trip.id,
+      tripName:  trip.name,
+      region:    trip.region.name,
+      startDate: trip.startDate,
+      endDate:   trip.endDate,
+      isPaid:    trip.isPaid,
       generatedAt: new Date().toISOString(),
       customer: {
         name:  `${user.firstName} ${user.lastName}`,
@@ -296,10 +298,9 @@ export class ActivityService {
     doc.fillColor('#111111').fontSize(11).font('Helvetica-Bold')
       .text('Trip Details', 50, 115);
     doc.fontSize(10).font('Helvetica').fillColor('#374151')
-      .text(`Trip:     ${invoice.tripName}`, 50, 132)
-      .text(`Region:   ${invoice.region}`, 50, 148)
-      .text(`Dates:    ${invoice.startDate}  →  ${invoice.endDate}`, 50, 164)
-      .text(`Duration: ${invoice.durationDays} day${invoice.durationDays !== 1 ? 's' : ''}`, 50, 180);
+      .text(`Trip:   ${invoice.tripName}`, 50, 132)
+      .text(`Region: ${invoice.region}`, 50, 148)
+      .text(`Dates:  ${invoice.startDate}  →  ${invoice.endDate}`, 50, 164);
 
     doc.fontSize(11).font('Helvetica-Bold').fillColor('#111111')
       .text('Billed To', pageWidth / 2, 115);
@@ -317,21 +318,23 @@ export class ActivityService {
     const tableTop = 245;
     doc.rect(50, tableTop, contentWidth, 22).fill('#f3f4f6');
     doc.fontSize(9).font('Helvetica-Bold').fillColor('#374151')
-      .text('Activity',       58,  tableTop + 7)
-      .text('Type',           300, tableTop + 7)
-      .text('$/Day',          380, tableTop + 7, { width: 55, align: 'right' })
-      .text('Days',           440, tableTop + 7, { width: 35, align: 'right' })
-      .text('Total',          480, tableTop + 7, { width: 65, align: 'right' });
+      .text('Activity',  58,  tableTop + 7)
+      .text('Type',      290, tableTop + 7)
+      .text('$/Day',     370, tableTop + 7, { width: 55, align: 'right' })
+      .text('Hours',     428, tableTop + 7, { width: 42, align: 'right' })
+      .text('Days',      473, tableTop + 7, { width: 32, align: 'right' })
+      .text('Total',     508, tableTop + 7, { width: 37, align: 'right' });
 
     let y = tableTop + 22;
     invoice.lineItems.forEach((item, i) => {
       if (i % 2 === 0) doc.rect(50, y, contentWidth, 20).fill('#fafafa');
       doc.fontSize(9).font('Helvetica').fillColor('#111111')
-        .text(item.name,                58,  y + 6, { width: 235 })
-        .text(item.type,                300, y + 6, { width: 75 })
-        .text(`$${item.pricePerDay.toFixed(2)}`, 380, y + 6, { width: 55, align: 'right' })
-        .text(String(item.durationDays),440, y + 6, { width: 35, align: 'right' })
-        .text(`$${item.lineTotal.toFixed(2)}`,   480, y + 6, { width: 65, align: 'right' });
+        .text(item.name,                          58,  y + 6, { width: 225 })
+        .text(item.type,                          290, y + 6, { width: 75 })
+        .text(`$${item.pricePerDay.toFixed(2)}`,  370, y + 6, { width: 55, align: 'right' })
+        .text(`${item.totalHours}h`,              428, y + 6, { width: 42, align: 'right' })
+        .text(String(item.durationDays),          473, y + 6, { width: 32, align: 'right' })
+        .text(`$${item.lineTotal.toFixed(2)}`,    508, y + 6, { width: 37, align: 'right' });
       y += 20;
     });
 
