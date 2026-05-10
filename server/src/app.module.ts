@@ -10,6 +10,7 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { ActivityModule } from './activity/activity.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 
     UsersModule,
     UploadModule,
+    ActivityModule,
   ],
   controllers: [AppController],
   providers: [
