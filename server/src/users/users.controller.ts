@@ -10,13 +10,17 @@ import {
   HttpStatus,
   UploadedFile,
 } from '@nestjs/common';
-import { ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { LoginUserDto } from './dto/login-user.dto';
+import { AuthResponseDto } from './dto/auth-response.dto';
 import { UploadService } from '../modules/upload/services/upload.service';
 import { UploadSingle } from '../modules/upload/decorators/upload.decorator';
 import { FileValidationPipe } from '../modules/upload/validators/file-validation.pipe';
+import { Public } from '../common/decorators/public.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @ApiTags('Users')
 @Controller('users')
@@ -27,6 +31,7 @@ export class UsersController {
   ) {}
 
   @Post('register')
+  @Public()
   @HttpCode(HttpStatus.CREATED)
   @UploadSingle('picture')
   @ApiConsumes('multipart/form-data')
@@ -48,7 +53,7 @@ export class UsersController {
       },
     },
   })
-  @ApiResponse({ status: 201, description: 'User registered successfully' })
+  @ApiResponse({ status: 201, type: AuthResponseDto, description: 'User registered successfully' })
   @ApiResponse({ status: 409, description: 'Email already registered' })
   @ApiResponse({ status: 400, description: 'Validation failed' })
   async register(
@@ -66,22 +71,46 @@ export class UsersController {
     return this.usersService.register(createUserDto, pictureUrl);
   }
 
+  @Post('login')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Login with email and password' })
+  @ApiResponse({ status: 200, type: AuthResponseDto, description: 'Login successful' })
+  @ApiResponse({ status: 401, description: 'Invalid email or password' })
+  @ApiResponse({ status: 400, description: 'Validation failed' })
+  login(@Body() loginUserDto: LoginUserDto) {
+    return this.usersService.login(loginUserDto);
+  }
+
+  @Get('me')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current authenticated user profile' })
+  @ApiResponse({ status: 200, description: 'Returns the JWT payload of the logged-in user' })
+  @ApiResponse({ status: 401, description: 'Missing or invalid token' })
+  getMe(@CurrentUser() user) {
+    return user;
+  }
+
   @Get()
+  @ApiBearerAuth()
   findAll() {
     return this.usersService.findAll();
   }
 
   @Get(':id')
+  @ApiBearerAuth()
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(+id);
   }
 
   @Patch(':id')
+  @ApiBearerAuth()
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(+id, updateUserDto);
   }
 
   @Delete(':id')
+  @ApiBearerAuth()
   remove(@Param('id') id: string) {
     return this.usersService.remove(+id);
   }
