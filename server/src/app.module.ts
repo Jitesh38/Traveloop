@@ -11,6 +11,7 @@ import { UsersModule } from './users/users.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { ActivityModule } from './activity/activity.module';
+import { ReviewModule } from './review/review.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { ActivityModule } from './activity/activity.module';
     UsersModule,
     UploadModule,
     ActivityModule,
+    ReviewModule,
   ],
   controllers: [AppController],
   providers: [

@@ -64,38 +64,41 @@ export class ActivityService {
   }
 
   async createMyTrip(dto: CreateMyTripDto, userId: string): Promise<MyTrip> {
-    const { name, startDate, endDate, activityIds } = dto;
+    const { name, regionName, startDate, endDate, activityIds } = dto;
 
     // 1. Validate dates
     if (new Date(endDate) < new Date(startDate)) {
       throw new BadRequestException('End date must be on or after start date');
     }
 
-    // 2. Load all activities to validate they exist and resolve regionId
-    //    Use the first activity's region as the trip region (all activities
-    //    should ideally belong to the same region — enforce this if needed)
-    const activities = await this.activityRepo.findByIds(activityIds);
+    // 2. Resolve region by name (case-insensitive)
+    const region = await this.regionRepo.findOne({
+      where: { name: ILike(regionName) },
+    });
+    if (!region) {
+      throw new NotFoundException(`Region "${regionName}" not found`);
+    }
 
+    // 3. Validate all activity IDs exist
+    const activities = await this.activityRepo.findByIds(activityIds);
     const foundIds = activities.map((a) => a.id);
     const missingIds = activityIds.filter((id) => !foundIds.includes(id));
     if (missingIds.length > 0) {
       throw new NotFoundException(`Activities not found: ${missingIds.join(', ')}`);
     }
 
-    const regionId = activities[0].regionId;
-
-    // 3. Create one TripActivity per activityId
+    // 4. Create one TripActivity per activityId
     //    startDateTime / endDateTime are left null — user will fill them later
     const tripActivities = this.tripActivityRepo.create(
       activityIds.map((activityId) => ({ activityId })),
     );
     const savedTripActivities = await this.tripActivityRepo.save(tripActivities);
 
-    // 4. Create MyTrip and link all saved TripActivities
+    // 5. Create MyTrip with the resolved regionId
     const myTrip = this.myTripRepo.create({
       name,
       userId,
-      regionId,
+      regionId: region.id,
       startDate,
       endDate,
       tripActivities: savedTripActivities,
